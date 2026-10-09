@@ -1,0 +1,14 @@
+<Project Sdk="WixToolset.Sdk/4.0.5">
+  <PropertyGroup>
+    <OutputType>Bundle</OutputType>
+    <OutputName>AuraIce-Setup</OutputName>
+    <EnableDefaultCompileItems>false</EnableDefaultCompileItems>
+    <DefineConstants>$(DefineConstants);MsiPath=$(MsiPath);PawnIOHash=$(PawnIOHash);PawnIOSize=$(PawnIOSize);RepoRoot=$(MSBuildProjectDirectory)\..</DefineConstants>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Include="AuraIce.Setup.wxs" />
+    <PackageReference Include="WixToolset.Bal.wixext" Version="4.0.5" />
+    <PackageReference Include="WixToolset.Util.wixext" Version="4.0.5" />
+  </ItemGroup>
+</Project>

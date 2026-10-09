@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<WixLocalization Culture="pt-BR" xmlns="http://wixtoolset.org/schemas/v4/wxl">
+  <String Id="Caption" Value="Instalador do Aura Ice Controller" />
+  <String Id="Title" Value="Aura Ice Controller" />
+  <String Id="InstallMessage" Value="Este assistente configura o visor Rise Mode Aura Ice Black para mostrar a temperatura da CPU. Se necessário, instalará o driver PawnIO, de terceiros, usado para ler os sensores. Requer Internet e autorização de administrador; talvez seja preciso reiniciar o computador." />
+
+  <String Id="HelpHeader" Value="Ajuda" />
+  <String Id="HelpText" Value="Instala o Aura Ice Controller e, se necessário, o driver PawnIO para leitura dos sensores de temperatura da CPU." />
+  <String Id="HelpCloseButton" Value="&amp;Fechar" />
+
+  <String Id="InstallAcceptCheckbox" Value="Aceito os termos de licença" />
+  <String Id="InstallCancelButton" Value="&amp;Cancelar" />
+  <String Id="InstallInstallButton" Value="&amp;Instalar" />
+  <String Id="InstallLicenseLinkText" Value="Consultar os termos de licença" />
+  <String Id="InstallOptionsButton" Value="&amp;Opções" />
+
+  <String Id="ModifyHeader" Value="O Aura Ice Controller já está instalado." />
+  <String Id="ModifyRepairButton" Value="&amp;Reparar" />
+  <String Id="ModifyUninstallButton" Value="&amp;Remover" />
+  <String Id="ModifyCancelButton" Value="&amp;Fechar" />
+
+  <String Id="OptionsHeader" Value="Opções de instalação" />
+  <String Id="OptionsLocationLabel" Value="Pasta de instalação:" />
+  <String Id="OptionsBrowseButton" Value="&amp;Procurar" />
+  <String Id="OptionsOkButton" Value="&amp;OK" />
+  <String Id="OptionsCancelButton" Value="&amp;Cancelar" />
+
+  <String Id="OverallProgressPackageText" Value="Preparando a instalação..." />
+  <String Id="ProgressHeader" Value="Instalando o Aura Ice Controller..." />
+  <String Id="ProgressLabel" Value="Andamento:" />
+  <String Id="ProgressCancelButton" Value="&amp;Cancelar" />
+  <String Id="UpdateButton" Value="&amp;Atualizar" />
+
+  <String Id="SuccessHeader" Value="Instalação concluída" />
+  <String Id="SuccessCacheHeader" Value="Arquivos preparados com sucesso." />
+  <String Id="SuccessInstallHeader" Value="O Aura Ice Controller foi instalado com sucesso." />
+  <String Id="SuccessLayoutHeader" Value="Arquivos copiados com sucesso." />
+  <String Id="SuccessModifyHeader" Value="Alterações concluídas com sucesso." />
+  <String Id="SuccessRepairHeader" Value="O Aura Ice Controller foi reparado com sucesso." />
+  <String Id="SuccessUninstallHeader" Value="O Aura Ice Controller foi removido." />
+  <String Id="SuccessUnsafeUninstallHeader" Value="A remoção foi concluída." />
+  <String Id="SuccessLaunchButton" Value="&amp;Abrir" />
+  <String Id="SuccessRestartText" Value="Reinicie o computador para concluir a instalação." />
+  <String Id="SuccessUninstallRestartText" Value="Reinicie o computador para concluir a remoção." />
+  <String Id="SuccessRestartButton" Value="&amp;Reiniciar" />
+  <String Id="SuccessCloseButton" Value="&amp;Concluir" />
+
+  <String Id="FailureHeader" Value="A instalação não foi concluída." />
+  <String Id="FailureCacheHeader" Value="Não foi possível preparar os arquivos." />
+  <String Id="FailureInstallHeader" Value="O Aura Ice Controller não pôde ser instalado." />
+  <String Id="FailureLayoutHeader" Value="Não foi possível copiar os arquivos." />
+  <String Id="FailureModifyHeader" Value="Não foi possível concluir as alterações." />
+  <String Id="FailureRepairHeader" Value="Não foi possível reparar o Aura Ice Controller." />
+  <String Id="FailureUninstallHeader" Value="Não foi possível remover o Aura Ice Controller." />
+  <String Id="FailureUnsafeUninstallHeader" Value="A remoção não foi concluída." />
+  <String Id="FailureHyperlinkLogText" Value="Abrir o registro detalhado da instalação" />
+  <String Id="FailureRestartText" Value="Reinicie o computador e tente novamente." />
+  <String Id="FailureRestartButton" Value="&amp;Reiniciar" />
+  <String Id="FailureCloseButton" Value="&amp;Fechar" />
+</WixLocalization>

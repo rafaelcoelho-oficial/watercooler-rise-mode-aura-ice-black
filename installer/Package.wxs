@@ -1,0 +1,144 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Wix xmlns="http://wixtoolset.org/schemas/v4/wxs"
+     xmlns:util="http://wixtoolset.org/schemas/v4/wxs/util">
+  <Package
+      Name="Aura Ice Controller"
+      Manufacturer="Aura Ice"
+      Version="0.1.7"
+      UpgradeCode="7A4B8F07-7E40-4F28-9F6D-A9A8755F37E1"
+      Scope="perMachine"
+      Compressed="yes">
+    <SummaryInformation Description="Controlador do visor Rise Mode Aura Ice Black. Lê a temperatura da CPU e atualiza o display conectado." />
+    <Icon Id="AuraIceProductIcon" SourceFile="$(var.RepoRoot)\assets\AuraIce.ico" />
+    <Property Id="ARPPRODUCTICON" Value="AuraIceProductIcon" />
+    <Property Id="ARPCOMMENTS" Value="Exibe a temperatura da CPU no visor Rise Mode Aura Ice Black. Requer o driver PawnIO para acessar os sensores." />
+    <MajorUpgrade DowngradeErrorMessage="Uma versão mais nova do Aura Ice Controller já está instalada." />
+    <MediaTemplate EmbedCab="yes" />
+
+    <StandardDirectory Id="ProgramFiles64Folder">
+      <Directory Id="INSTALLFOLDER" Name="AuraIce" />
+    </StandardDirectory>
+
+    <StandardDirectory Id="CommonAppDataFolder">
+      <Directory Id="AURAICEDATA" Name="AuraIce" />
+      <Directory Id="CommonStartMenuMicrosoft" Name="Microsoft">
+        <Directory Id="CommonStartMenuWindows" Name="Windows">
+          <Directory Id="CommonStartMenu" Name="Start Menu">
+            <Directory Id="CommonPrograms" Name="Programs">
+              <Directory Id="AuraIceStartMenuFolder" Name="Aura Ice Controller" />
+              <Directory Id="CommonStartupFolder" Name="Startup" />
+            </Directory>
+          </Directory>
+        </Directory>
+      </Directory>
+    </StandardDirectory>
+
+    <DirectoryRef Id="INSTALLFOLDER">
+      <Component Id="ServiceComponent" Bitness="always64">
+        <File Id="ServiceExecutable"
+              Source="$(var.PublishDir)\service\AuraIce.Service.exe"
+              KeyPath="yes" />
+        <ServiceInstall
+            Id="AuraIceServiceInstall"
+            Name="AuraIceTemperatureService"
+            DisplayName="Aura Ice — Serviço de Temperatura"
+            Description="Lê os sensores de temperatura do processador e atualiza o visor do Rise Mode Aura Ice Black."
+            Type="ownProcess"
+            Start="auto"
+            Account="LocalSystem"
+            ErrorControl="normal">
+          <util:ServiceConfig
+              FirstFailureActionType="restart"
+              SecondFailureActionType="restart"
+              ThirdFailureActionType="none"
+              RestartServiceDelayInSeconds="60"
+              ResetPeriodInDays="1" />
+        </ServiceInstall>
+        <ServiceControl
+            Id="AuraIceServiceControl"
+            Name="AuraIceTemperatureService"
+            Start="install"
+            Stop="both"
+            Remove="uninstall"
+            Wait="yes" />
+      </Component>
+
+      <Component Id="AppComponent" Bitness="always64">
+        <File Id="AppExecutable"
+              Source="$(var.PublishDir)\app\AuraIce.App.exe"
+              KeyPath="yes" />
+      </Component>
+    </DirectoryRef>
+
+    <DirectoryRef Id="CommonStartupFolder">
+      <Component Id="StartupShortcutComponent" Bitness="always64" Guid="9BC90682-DB6B-45A1-94FC-D38417F5999A">
+        <RegistryValue
+            Root="HKLM"
+            Key="Software\AuraIce\Controller"
+            Name="StartupShortcut"
+            Type="integer"
+            Value="1"
+            KeyPath="yes" />
+        <Shortcut
+            Id="StartupShortcut"
+            Directory="CommonStartupFolder"
+            Name="Aura Ice Controller"
+            Target="[INSTALLFOLDER]AuraIce.App.exe"
+            Arguments="--background"
+            WorkingDirectory="INSTALLFOLDER"
+            Icon="AuraIceProductIcon"
+            Advertise="no" />
+      </Component>
+    </DirectoryRef>
+
+    <DirectoryRef Id="AuraIceStartMenuFolder">
+      <Component Id="StartMenuShortcutsComponent" Bitness="always64" Guid="C9DF94A5-5ED1-4DAA-86D5-C5B20DA0A55D">
+        <RegistryValue
+            Root="HKLM"
+            Key="Software\AuraIce\Controller"
+            Name="StartMenuShortcuts"
+            Type="integer"
+            Value="1"
+            KeyPath="yes" />
+        <Shortcut
+            Id="StartMenuAppShortcut"
+            Directory="AuraIceStartMenuFolder"
+            Name="Aura Ice Controller"
+            Description="Abrir o widget e acompanhar a temperatura da CPU."
+            Target="[INSTALLFOLDER]AuraIce.App.exe"
+            WorkingDirectory="INSTALLFOLDER"
+            Icon="AuraIceProductIcon"
+            Advertise="no" />
+        <Shortcut
+            Id="StartMenuUninstallShortcut"
+            Directory="AuraIceStartMenuFolder"
+            Name="Desinstalar Aura Ice Controller"
+            Description="Remover o Aura Ice Controller deste computador."
+            Target="[INSTALLFOLDER]AuraIce.App.exe"
+            Arguments="--uninstall"
+            WorkingDirectory="INSTALLFOLDER"
+            Icon="AuraIceProductIcon"
+            Advertise="no" />
+        <RemoveFolder Id="RemoveAuraIceStartMenuFolder" Directory="AuraIceStartMenuFolder" On="uninstall" />
+      </Component>
+    </DirectoryRef>
+
+    <DirectoryRef Id="AURAICEDATA">
+      <Component Id="DataDirectoryComponent" Bitness="always64" Guid="AE45B473-3E1D-4FD1-8C1C-B708A8A02383">
+        <CreateFolder>
+          <util:PermissionEx User="Users" GenericRead="yes" GenericWrite="yes" CreateFile="yes" CreateChild="yes" Traverse="yes" />
+          <util:PermissionEx User="SYSTEM" GenericAll="yes" />
+          <util:PermissionEx User="Administrators" GenericAll="yes" />
+        </CreateFolder>
+      </Component>
+    </DirectoryRef>
+
+    <Feature Id="MainFeature" Title="Aura Ice Controller" Level="1">
+      <ComponentRef Id="ServiceComponent" />
+      <ComponentRef Id="AppComponent" />
+      <ComponentRef Id="StartupShortcutComponent" />
+      <ComponentRef Id="StartMenuShortcutsComponent" />
+      <ComponentRef Id="DataDirectoryComponent" />
+    </Feature>
+  </Package>
+</Wix>

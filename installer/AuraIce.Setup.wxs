@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Wix xmlns="http://wixtoolset.org/schemas/v4/wxs"
+     xmlns:bal="http://wixtoolset.org/schemas/v4/wxs/bal"
+     xmlns:util="http://wixtoolset.org/schemas/v4/wxs/util">
+  <Bundle
+      Name="Aura Ice Controller"
+      Manufacturer="Aura Ice"
+      Version="0.1.7"
+      UpgradeCode="C73ED7F9-E729-4946-BE53-D7C1F76E5328"
+      IconSourceFile="$(var.RepoRoot)\assets\AuraIce.ico"
+      Compressed="yes">
+    <util:RegistrySearch
+        Id="PawnIOVersionSearch"
+        Root="HKLM"
+        Key="SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\PawnIO"
+        Value="DisplayVersion"
+        Variable="PawnIOVersion"
+        Result="value"
+        Bitness="always64" />
+
+    <BootstrapperApplication>
+      <bal:WixStandardBootstrapperApplication
+          Theme="hyperlinkLicense"
+          ThemeFile="$(var.RepoRoot)\installer\AuraIce.Theme.xml"
+          LogoFile="$(var.RepoRoot)\star.png"
+          LicenseUrl=""
+          LocalizationFile="$(var.RepoRoot)\installer\AuraIce.Setup.pt-BR.wxl"
+          SuppressOptionsUI="yes" />
+    </BootstrapperApplication>
+
+    <Chain>
+      <ExePackage
+          Id="PawnIO"
+          DisplayName="Driver oficial PawnIO para os sensores da CPU"
+          Description="Driver de baixo nível necessário para a leitura da temperatura do processador."
+          PerMachine="yes"
+          Permanent="yes"
+          Vital="yes"
+          InstallArguments="-install -silent"
+          DetectCondition="PawnIOVersion &gt;= v2.0.0.0"
+          LogPathVariable="PawnIOLog">
+        <ExePackagePayload
+            Name="PawnIO_setup.exe"
+            DownloadUrl="https://github.com/namazso/PawnIO.Setup/releases/download/2.2.0/PawnIO_setup.exe"
+            Hash="$(var.PawnIOHash)"
+            Size="$(var.PawnIOSize)" />
+        <ExitCode Value="3010" Behavior="scheduleReboot" />
+        <ExitCode Value="1641" Behavior="scheduleReboot" />
+      </ExePackage>
+
+      <MsiPackage
+          Id="AuraIceMsi"
+          SourceFile="$(var.MsiPath)"
+          Vital="yes" />
+    </Chain>
+  </Bundle>
+</Wix>

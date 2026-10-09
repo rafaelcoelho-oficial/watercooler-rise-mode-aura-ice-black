@@ -1,0 +1,15 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net8.0-windows</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <ApplicationManifest>app.manifest</ApplicationManifest>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\AuraIce.Core\AuraIce.Core.csproj" />
+    <ProjectReference Include="..\AuraIce.Hardware\AuraIce.Hardware.csproj" />
+    <ProjectReference Include="..\AuraIce.Telemetry\AuraIce.Telemetry.csproj" />
+  </ItemGroup>
+</Project>
