@@ -1,6 +1,7 @@
 [CmdletBinding()]
 param(
-    [switch]$SkipPublish
+    [switch]$SkipPublish,
+    [switch]$SkipValidation
 )
 
 $ErrorActionPreference = "Stop"
@@ -16,6 +17,12 @@ $pawnIoVersion = "2.2.0"
 $pawnIoUrl = "https://github.com/namazso/PawnIO.Setup/releases/download/$pawnIoVersion/PawnIO_setup.exe"
 $pawnIoSha256 = "1F519A22E47187F70A1379A48CA604981C4FCF694F4E65B734AAA74A9FBA3032"
 $tempDirectory = Join-Path ([System.IO.Path]::GetTempPath()) ("AuraIce-Installer-" + [guid]::NewGuid().ToString("N"))
+$validationProperties = @()
+
+if ($SkipValidation) {
+    $validationProperties = @("-p:SuppressValidation=true")
+    Write-Warning "A validação ICE do MSI foi desativada. Use esta opção somente em ambientes sem o serviço Windows Installer, como CI ou sandbox."
+}
 
 try {
     & $iconScript
@@ -40,13 +47,14 @@ try {
         }
     }
 
-    Invoke-DotnetCommand -Arguments @(
+    $installerBuildArguments = @(
         "build",
         $installerProject,
         "--configuration", "Release",
         "--nologo",
         "-p:RestoreConfigFile=$BuildNuGetConfig"
-    ) -FailureMessage "A compilação do MSI falhou."
+    ) + $validationProperties
+    Invoke-DotnetCommand -Arguments $installerBuildArguments -FailureMessage "A compilação do MSI falhou."
 
     if (-not (Test-Path $msiPath)) {
         throw "MSI não encontrado no caminho esperado: $msiPath"
@@ -75,7 +83,7 @@ try {
     $pawnIoSha512 = (Get-FileHash -LiteralPath $pawnIoPath -Algorithm SHA512).Hash
     $pawnIoSize = (Get-Item -LiteralPath $pawnIoPath).Length
 
-    Invoke-DotnetCommand -Arguments @(
+    $setupBuildArguments = @(
         "build",
         $setupProject,
         "--configuration", "Release",
@@ -84,7 +92,8 @@ try {
         "-p:MsiPath=$msiPath",
         "-p:PawnIOHash=$pawnIoSha512",
         "-p:PawnIOSize=$pawnIoSize"
-    ) -FailureMessage "A compilação do instalador AuraIce-Setup.exe falhou."
+    ) + $validationProperties
+    Invoke-DotnetCommand -Arguments $setupBuildArguments -FailureMessage "A compilação do instalador AuraIce-Setup.exe falhou."
 
     if (-not (Test-Path $setupPath)) {
         throw "Instalador não encontrado no caminho esperado: $setupPath"

@@ -1,3 +1,5 @@
+using AuraIce.Core.Telemetry;
+
 namespace AuraIce.Core.Status;
 
 public sealed record AuraIceStatusSnapshot(
@@ -7,6 +9,8 @@ public sealed record AuraIceStatusSnapshot(
     string? LastError,
     DateTimeOffset Timestamp)
 {
+    public CpuTelemetrySnapshot Telemetry { get; init; } = CpuTelemetrySnapshot.Empty;
+
     public static AuraIceStatusSnapshot Empty { get; } = new(
         DeviceConnected: false,
         TemperatureCelsius: null,

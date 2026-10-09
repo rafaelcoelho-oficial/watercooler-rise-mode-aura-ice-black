@@ -1,4 +1,3 @@
-using System.Diagnostics;
 using System.Threading;
 using Forms = System.Windows.Forms;
 
@@ -22,6 +21,13 @@ public partial class App : System.Windows.Application
     protected override void OnStartup(System.Windows.StartupEventArgs e)
     {
         base.OnStartup(e);
+
+        if (e.Args.Any(argument => argument.Equals("--shutdown", StringComparison.OrdinalIgnoreCase)))
+        {
+            SignalExistingInstance(UninstallEventName);
+            Shutdown();
+            return;
+        }
 
         if (e.Args.Any(argument => argument.Equals("--uninstall", StringComparison.OrdinalIgnoreCase)))
         {
@@ -180,30 +186,69 @@ public partial class App : System.Windows.Application
 
     private Forms.ContextMenuStrip CreateContextMenu()
     {
-        var menu = new Forms.ContextMenuStrip();
-        menu.Items.Add("Abrir widget", null, (_, _) => ShowWindow());
-        menu.Items.Add("Desinstalar Aura Ice Controller...", null, (_, _) => StartUninstallerProcess());
-        menu.Items.Add(new Forms.ToolStripSeparator());
-        menu.Items.Add("Sair", null, (_, _) => ExitApplication());
+        var renderer = new AuraIceTrayMenuRenderer();
+        var menu = new Forms.ContextMenuStrip
+        {
+            Renderer = renderer,
+            BackColor = AuraIceTrayMenuRenderer.MenuBackground,
+            ForeColor = AuraIceTrayMenuRenderer.MenuForeground,
+            Font = new System.Drawing.Font("Segoe UI", 9F),
+            ShowImageMargin = false,
+            ShowCheckMargin = false,
+            AutoSize = true,
+            Padding = new System.Windows.Forms.Padding(6)
+        };
+        menu.MouseMove += (_, eventArgs) =>
+        {
+            ToolStripItem? item = menu.GetItemAt(eventArgs.Location);
+            renderer.SetHoveredItem(item);
+            menu.Invalidate();
+        };
+        menu.MouseLeave += (_, _) =>
+        {
+            renderer.SetHoveredItem(null);
+            menu.Invalidate();
+        };
+
+        var openItem = new Forms.ToolStripMenuItem("Abrir widget")
+        {
+            Padding = new System.Windows.Forms.Padding(12, 7, 12, 7)
+        };
+        openItem.Click += (_, _) => ShowWindow();
+
+        var exitItem = new Forms.ToolStripMenuItem("Sair")
+        {
+            Padding = new System.Windows.Forms.Padding(12, 7, 12, 7)
+        };
+        exitItem.Click += (_, _) => ExitApplication();
+
+        TrackMenuItemHover(openItem, menu, renderer);
+        TrackMenuItemHover(exitItem, menu, renderer);
+
+        menu.Items.Add(openItem);
+        menu.Items.Add(new Forms.ToolStripSeparator
+        {
+            Margin = new System.Windows.Forms.Padding(10, 3, 10, 3)
+        });
+        menu.Items.Add(exitItem);
         return menu;
     }
 
-    private void StartUninstallerProcess()
+    private static void TrackMenuItemHover(
+        Forms.ToolStripMenuItem item,
+        Forms.ContextMenuStrip menu,
+        AuraIceTrayMenuRenderer renderer)
     {
-        try
+        item.MouseEnter += (_, _) =>
         {
-            string executablePath = Environment.ProcessPath
-                ?? throw new InvalidOperationException("Não foi possível localizar o executável do Aura Ice.");
-            Process.Start(new ProcessStartInfo(executablePath, "--uninstall") { UseShellExecute = true });
-        }
-        catch (Exception exception)
+            renderer.SetHoveredItem(item);
+            menu.Invalidate();
+        };
+        item.MouseLeave += (_, _) =>
         {
-            System.Windows.MessageBox.Show(
-                $"Não foi possível abrir o desinstalador.\n\n{exception.Message}",
-                "Aura Ice Controller",
-                System.Windows.MessageBoxButton.OK,
-                System.Windows.MessageBoxImage.Error);
-        }
+            renderer.SetHoveredItem(null);
+            menu.Invalidate();
+        };
     }
 
     private void ShowWindow()

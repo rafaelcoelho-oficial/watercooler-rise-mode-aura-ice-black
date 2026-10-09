@@ -51,12 +51,6 @@ public sealed class AuraIceWorker : BackgroundService
                     if (connected)
                     {
                         _logger.LogInformation("Display Rise Mode conectado.");
-                        _state.Update(new AuraIceStatusSnapshot(
-                            DeviceConnected: true,
-                            TemperatureCelsius: null,
-                            SensorName: null,
-                            LastError: null,
-                            Timestamp: DateTimeOffset.UtcNow));
                     }
                     else
                     {
@@ -70,32 +64,33 @@ public sealed class AuraIceWorker : BackgroundService
                     }
                 }
 
-                TemperatureReading? reading = _temperatureProvider.ReadTemperature(settings.PreferredSensorIdentifier);
-                if (reading is null)
+                CpuTelemetrySnapshot telemetry = _temperatureProvider.ReadSnapshot(settings.PreferredSensorIdentifier);
+                CpuMetricReading temperature = telemetry.Temperature;
+                if (connected && temperature is { IsAvailable: true, Value: { } value })
                 {
-                    _logger.LogWarning("Nenhum sensor de temperatura da CPU disponível.");
-                    _state.Update(_state.Snapshot with
-                    {
-                        DeviceConnected = connected,
-                        LastError = "Nenhum sensor de temperatura da CPU disponível.",
-                        Timestamp = DateTimeOffset.UtcNow
-                    });
+                    _display.WriteTemperature(value);
                 }
-                else
-                {
-                    if (connected)
-                    {
-                        _display.WriteTemperature(reading.Celsius);
-                    }
 
-                    _state.Update(new AuraIceStatusSnapshot(
-                        DeviceConnected: connected,
-                        TemperatureCelsius: reading.Celsius,
-                        SensorName: reading.SensorName,
-                        LastError: connected ? null : _state.Snapshot.LastError,
-                        Timestamp: reading.Timestamp));
-                    _logger.LogDebug("Temperatura enviada: {Temperature:F1} °C ({Sensor})", reading.Celsius, reading.SensorName);
-                }
+                string? telemetryError = temperature.IsAvailable
+                    ? null
+                    : temperature.Error ?? "Nenhum sensor de temperatura da CPU disponível.";
+                _state.Update(new AuraIceStatusSnapshot(
+                    DeviceConnected: connected,
+                    TemperatureCelsius: temperature.Value,
+                    SensorName: temperature.SensorName,
+                    LastError: connected ? telemetryError : _state.Snapshot.LastError ?? telemetryError,
+                    Timestamp: telemetry.Timestamp)
+                {
+                    Telemetry = telemetry
+                });
+
+                _logger.LogDebug(
+                    "Snapshot CPU atualizado. Temperatura: {Temperature}; Uso: {Usage}; Frequência: {Frequency}; Tensão: {Voltage}; Potência: {Power}",
+                    FormatMetric(telemetry.Temperature),
+                    FormatMetric(telemetry.Usage),
+                    FormatMetric(telemetry.Frequency),
+                    FormatMetric(telemetry.Voltage),
+                    FormatMetric(telemetry.Power));
             }
             catch (Exception exception) when (exception is IOException or InvalidOperationException)
             {
@@ -105,6 +100,7 @@ public sealed class AuraIceWorker : BackgroundService
                 {
                     DeviceConnected = false,
                     LastError = exception.Message,
+                    Telemetry = CpuTelemetrySnapshot.CreateUnavailable(DateTimeOffset.UtcNow, exception.Message),
                     Timestamp = DateTimeOffset.UtcNow
                 });
                 _logger.LogWarning(exception, "Falha no ciclo do display; será feita nova tentativa.");
@@ -114,6 +110,7 @@ public sealed class AuraIceWorker : BackgroundService
                 _state.Update(_state.Snapshot with
                 {
                     LastError = exception.Message,
+                    Telemetry = CpuTelemetrySnapshot.CreateUnavailable(DateTimeOffset.UtcNow, exception.Message),
                     Timestamp = DateTimeOffset.UtcNow
                 });
                 _logger.LogError(exception, "Falha inesperada no ciclo do serviço.");
@@ -128,5 +125,12 @@ public sealed class AuraIceWorker : BackgroundService
         _display.Dispose();
         _temperatureProvider.Dispose();
         base.Dispose();
+    }
+
+    private static string FormatMetric(CpuMetricReading reading)
+    {
+        return reading.Value is { } value
+            ? $"{value:0.##} {reading.Unit}"
+            : "N/D";
     }
 }

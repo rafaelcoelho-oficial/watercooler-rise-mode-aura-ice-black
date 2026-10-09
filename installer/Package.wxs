@@ -4,7 +4,7 @@
   <Package
       Name="Aura Ice Controller"
       Manufacturer="Aura Ice"
-      Version="0.1.7"
+      Version="0.1.18"
       UpgradeCode="7A4B8F07-7E40-4F28-9F6D-A9A8755F37E1"
       Scope="perMachine"
       Compressed="yes">
@@ -12,8 +12,49 @@
     <Icon Id="AuraIceProductIcon" SourceFile="$(var.RepoRoot)\assets\AuraIce.ico" />
     <Property Id="ARPPRODUCTICON" Value="AuraIceProductIcon" />
     <Property Id="ARPCOMMENTS" Value="Exibe a temperatura da CPU no visor Rise Mode Aura Ice Black. Requer o driver PawnIO para acessar os sensores." />
+    <Property Id="AURAICEDATAPATH" Value="%ProgramData%\AuraIce" />
+    <CustomAction
+        Id="RequestAuraIceAppShutdownBeforeUninstall"
+        FileRef="AppExecutable"
+        ExeCommand="--shutdown"
+        Execute="immediate"
+        Impersonate="yes"
+        Return="ignore" />
+    <CustomAction
+        Id="RequestAuraIceAppShutdownAfterInstall"
+        FileRef="AppExecutable"
+        ExeCommand="--shutdown"
+        Execute="immediate"
+        Impersonate="yes"
+        Return="ignore" />
+    <SetProperty
+        Id="WixUnelevatedShellExecTarget"
+        Value="[INSTALLFOLDER]AuraIce.App.exe"
+        Before="LaunchAuraIceApp"
+        Sequence="execute" />
+    <CustomAction
+        Id="LaunchAuraIceApp"
+        BinaryRef="Wix4UtilCA_$(sys.BUILDARCHSHORT)"
+        DllEntry="WixUnelevatedShellExec"
+        Execute="immediate"
+        Return="ignore" />
+    <util:CloseApplication
+        Id="CloseAuraIceApp"
+        Target="AuraIce.App.exe"
+        CloseMessage="yes"
+        ElevatedCloseMessage="yes"
+        TerminateProcess="1"
+        RebootPrompt="no"
+        Timeout="5"
+        Description="O Aura Ice Controller será encerrado para concluir a operação." />
     <MajorUpgrade DowngradeErrorMessage="Uma versão mais nova do Aura Ice Controller já está instalada." />
     <MediaTemplate EmbedCab="yes" />
+
+    <InstallExecuteSequence>
+      <Custom Action="RequestAuraIceAppShutdownBeforeUninstall" Before="InstallInitialize" Condition="REMOVE" />
+      <Custom Action="RequestAuraIceAppShutdownAfterInstall" After="InstallFinalize" Condition="NOT REMOVE" />
+      <Custom Action="LaunchAuraIceApp" After="RequestAuraIceAppShutdownAfterInstall" Condition="NOT REMOVE" />
+    </InstallExecuteSequence>
 
     <StandardDirectory Id="ProgramFiles64Folder">
       <Directory Id="INSTALLFOLDER" Name="AuraIce" />
@@ -130,6 +171,7 @@
           <util:PermissionEx User="SYSTEM" GenericAll="yes" />
           <util:PermissionEx User="Administrators" GenericAll="yes" />
         </CreateFolder>
+        <util:RemoveFolderEx Id="RemoveAuraIceData" Property="AURAICEDATAPATH" On="uninstall" />
       </Component>
     </DirectoryRef>
 
