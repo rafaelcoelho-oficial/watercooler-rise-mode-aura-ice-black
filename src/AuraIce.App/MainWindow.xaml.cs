@@ -695,13 +695,7 @@ public partial class MainWindow : Window
 
     private void MinimizeButton_Click(object sender, RoutedEventArgs e) => Hide();
 
-    private void CloseButton_Click(object sender, RoutedEventArgs e)
-    {
-        if (System.Windows.Application.Current is App app)
-        {
-            app.RequestExit();
-        }
-    }
+    private void CloseButton_Click(object sender, RoutedEventArgs e) => Hide();
 
     private void Window_Closing(object? sender, CancelEventArgs e)
     {
@@ -711,10 +705,7 @@ public partial class MainWindow : Window
         }
 
         e.Cancel = true;
-        if (System.Windows.Application.Current is App app)
-        {
-            app.RequestExit();
-        }
+        Hide();
     }
 
     private readonly record struct GaugePalette(

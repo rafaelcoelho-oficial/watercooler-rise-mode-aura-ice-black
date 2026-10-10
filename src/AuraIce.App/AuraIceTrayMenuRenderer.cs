@@ -17,6 +17,7 @@ internal sealed class AuraIceTrayMenuRenderer : ToolStripProfessionalRenderer
     private static readonly Color DisabledForeground = Color.FromArgb(112, 137, 157);
 
     private const float LogicalBorderWidth = 1F;
+    private const float LogicalMenuCornerRadius = 8F;
     private const float LogicalSelectionInset = 1F;
     private const float LogicalCornerRadius = 6F;
     private const float LogicalSeparatorInset = 8F;
@@ -57,17 +58,22 @@ internal sealed class AuraIceTrayMenuRenderer : ToolStripProfessionalRenderer
 
         float scale = DpiScale(e.ToolStrip);
         float borderWidth = LogicalBorderWidth * scale;
+        float inset = borderWidth / 2F;
+        float radius = Math.Max(0, LogicalMenuCornerRadius * scale - inset);
+        var borderBounds = new RectangleF(
+            bounds.X + inset,
+            bounds.Y + inset,
+            bounds.Width - borderWidth,
+            bounds.Height - borderWidth);
+        radius = Math.Min(radius, Math.Min(borderBounds.Width, borderBounds.Height) / 2F);
         var state = e.Graphics.Save();
         try
         {
-            e.Graphics.PixelOffsetMode = PixelOffsetMode.Half;
+            e.Graphics.SmoothingMode = SmoothingMode.AntiAlias;
+            e.Graphics.PixelOffsetMode = PixelOffsetMode.HighQuality;
+            using var path = RoundedRectangle(borderBounds, radius);
             using var pen = new Pen(MenuBorder, borderWidth);
-            e.Graphics.DrawRectangle(
-                pen,
-                bounds.X + borderWidth / 2F,
-                bounds.Y + borderWidth / 2F,
-                bounds.Width - borderWidth,
-                bounds.Height - borderWidth);
+            e.Graphics.DrawPath(pen, path);
         }
         finally
         {

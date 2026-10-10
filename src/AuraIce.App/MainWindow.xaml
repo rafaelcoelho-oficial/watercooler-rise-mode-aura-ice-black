@@ -53,7 +53,7 @@
                     <Button Grid.Column="4" Style="{StaticResource ChromeButtonStyle}" Content="−"
                             ToolTip="Minimizar para a bandeja" Click="MinimizeButton_Click" />
                     <Button Grid.Column="6" Style="{StaticResource ChromeButtonStyle}" Content="×"
-                            ToolTip="Encerrar interface" Click="CloseButton_Click" />
+                            ToolTip="Fechar para a bandeja" Click="CloseButton_Click" />
                 </Grid>
 
                 <!-- Gauge -->
@@ -265,7 +265,7 @@
                                 <ColumnDefinition Width="*" />
                             </Grid.ColumnDefinitions>
                             <TextBlock x:Name="VersionText" Grid.Row="1" Grid.Column="0"
-                                Text="Versão 0.1.17" Foreground="{StaticResource MutedTextBrush}"
+                                Text="Versão 0.1.21" Foreground="{StaticResource MutedTextBrush}"
                                 FontSize="10" TextWrapping="NoWrap" TextTrimming="CharacterEllipsis"
                                 TextAlignment="Center" VerticalAlignment="Center"
                                 ToolTip="{Binding Text, RelativeSource={RelativeSource Self}}" />

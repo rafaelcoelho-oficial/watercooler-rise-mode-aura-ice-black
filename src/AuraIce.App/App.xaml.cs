@@ -221,9 +221,15 @@ public partial class App : System.Windows.Application
         menu.Items.Add(openItem);
         menu.Items.Add(new Forms.ToolStripSeparator
         {
-            Margin = new System.Windows.Forms.Padding(10, 3, 10, 3)
+            Margin = new System.Windows.Forms.Padding(0, 0, 0, 0)
         });
         menu.Items.Add(exitItem);
+        menu.Opened += (_, _) => ApplyRoundedCorners(menu, 8);
+        menu.SizeChanged += (_, _) =>
+        {
+            if (menu.IsHandleCreated)
+                ApplyRoundedCorners(menu, 8);
+        };
         menu.Opening += (_, _) =>
         {
             int itemWidth = menu.Items.OfType<Forms.ToolStripMenuItem>()
@@ -245,6 +251,57 @@ public partial class App : System.Windows.Application
             item.MouseUp += (_, _) => renderer.SetPointerPressedItem(null);
             item.MouseLeave += (_, _) => renderer.SetPointerPressedItem(null);
         }
+    }
+
+    private static void ApplyRoundedCorners(Forms.ContextMenuStrip menu, int radius)
+    {
+        if (menu.Width <= 0 || menu.Height <= 0)
+            return;
+
+        using var path = new System.Drawing.Drawing2D.GraphicsPath();
+
+        int scaledRadius = Math.Max(1, (int)Math.Round(radius * menu.DeviceDpi / 96F));
+        int diameter = scaledRadius * 2;
+
+        var bounds = new System.Drawing.Rectangle(
+            0, 0,
+            menu.Width,
+            menu.Height
+        );
+
+        path.AddArc(
+            bounds.Left,
+            bounds.Top,
+            diameter,
+            diameter,
+            180, 90);
+
+        path.AddArc(
+            bounds.Right - diameter,
+            bounds.Top,
+            diameter,
+            diameter,
+            270, 90);
+
+        path.AddArc(
+            bounds.Right - diameter,
+            bounds.Bottom - diameter,
+            diameter,
+            diameter,
+            0, 90);
+
+        path.AddArc(
+            bounds.Left,
+            bounds.Bottom - diameter,
+            diameter,
+            diameter,
+            90, 90);
+
+        path.CloseFigure();
+
+        var oldRegion = menu.Region;
+        menu.Region = new System.Drawing.Region(path);
+        oldRegion?.Dispose();
     }
 
     private void ShowWindow()
