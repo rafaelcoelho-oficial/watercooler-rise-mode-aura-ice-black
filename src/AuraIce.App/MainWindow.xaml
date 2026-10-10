@@ -3,7 +3,7 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         Title="Aura Ice CPU Monitor"
         Width="450"
-        Height="700"
+        Height="745"
         WindowStartupLocation="CenterScreen"
         WindowStyle="None"
         ResizeMode="NoResize"
@@ -13,7 +13,7 @@
         MouseLeftButtonDown="Window_Drag"
         Closing="Window_Closing">
     <Grid>
-        <Border Margin="10" Padding="19,17" CornerRadius="27"
+        <Border Margin="10" Padding="19,10" CornerRadius="27"
                 Background="{StaticResource WindowGradientBrush}"
                 BorderBrush="#2A5A88" BorderThickness="1.2"
                 Effect="{StaticResource PanelShadow}">
@@ -21,10 +21,10 @@
                 <Grid.RowDefinitions>
                     <RowDefinition Height="56" />
                     <RowDefinition Height="324" />
-                    <RowDefinition Height="174" />
                     <RowDefinition Height="*" />
                 </Grid.RowDefinitions>
 
+                <!-- Header -->
                 <Grid Grid.Row="0">
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="50" />
@@ -53,14 +53,14 @@
                     <Button Grid.Column="4" Style="{StaticResource ChromeButtonStyle}" Content="−"
                             ToolTip="Minimizar para a bandeja" Click="MinimizeButton_Click" />
                     <Button Grid.Column="6" Style="{StaticResource ChromeButtonStyle}" Content="×"
-                            ToolTip="Ocultar widget" Click="CloseButton_Click" />
+                            ToolTip="Encerrar interface" Click="CloseButton_Click" />
                 </Grid>
 
+                <!-- Gauge -->
                 <Grid Grid.Row="1" Margin="0,16">
                     <Viewbox Width="292" Height="292" Stretch="Uniform" HorizontalAlignment="Center" VerticalAlignment="Center">
-                        <Grid Width="320" Height="320">
-                            <Ellipse Width="308" Height="308" Fill="#0B1928" Stroke="#173A5C" StrokeThickness="1.2" />
-                            <Ellipse Width="292" Height="292" Stroke="#102941" StrokeThickness="1" />
+                        <Grid Width="320" Height="320" UseLayoutRounding="True" SnapsToDevicePixels="True">
+                            <Ellipse Width="316" Height="316" Fill="#0B1928" Stroke="#173A5C" StrokeThickness="1.2" />
                             <Canvas x:Name="GaugeCanvas" Width="320" Height="320" IsHitTestVisible="False" />
                             <Ellipse Width="218" Height="218" Fill="#0D1D2E" Stroke="#1A3D61" StrokeThickness="1" />
                             <Ellipse Width="200" Height="200" Stroke="#112C46" StrokeThickness="1" />
@@ -68,12 +68,16 @@
                                 <TextBlock Text="TEMPERATURA DA CPU" Foreground="{StaticResource SecondaryTextBrush}"
                                            FontSize="10" FontWeight="SemiBold" HorizontalAlignment="Center"
                                            />
-                                <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,8,0,0">
-                                    <TextBlock x:Name="TemperatureText" Text="—" Foreground="{StaticResource PrimaryTextBrush}"
-                                               FontSize="57" FontWeight="Light" VerticalAlignment="Center" />
-                                    <TextBlock Text="°C" Foreground="{StaticResource AccentBrush}" FontSize="20"
-                                               FontWeight="SemiBold" VerticalAlignment="Center" Margin="6,17,0,0" />
-                                </StackPanel>
+                                <Viewbox MaxWidth="185" Stretch="Uniform" StretchDirection="DownOnly"
+                                         HorizontalAlignment="Center" Margin="0,8,0,0">
+                                    <StackPanel Orientation="Horizontal">
+                                        <TextBlock x:Name="TemperatureText" Text="—" Foreground="{StaticResource PrimaryTextBrush}"
+                                                   FontSize="57" FontWeight="Light" VerticalAlignment="Center" />
+                                        <TextBlock x:Name="TemperatureUnitText" Text="°C" Foreground="{StaticResource AccentBrush}"
+                                                   FontSize="20" FontWeight="SemiBold" VerticalAlignment="Center"
+                                                   Margin="6,17,0,0" />
+                                    </StackPanel>
+                                </Viewbox>
                                 <TextBlock x:Name="GaugeStatusText" Text="Aguardando leitura"
                                            Foreground="{StaticResource SecondaryTextBrush}" FontSize="10"
                                            HorizontalAlignment="Center" Margin="0,5,0,0"
@@ -83,20 +87,29 @@
                     </Viewbox>
                 </Grid>
 
-                <Grid Grid.Row="2" Margin="0,3,0,5">
+                <Grid Grid.Row="3" Margin="0,3,0,5">
                     <Grid.RowDefinitions>
-                        <RowDefinition Height="82" />
-                        <RowDefinition Height="82" />
+                        <RowDefinition Height="100" />
+                        <RowDefinition Height="100" />
+                        <RowDefinition Height="100" />
+                        <RowDefinition Height="30" />
                     </Grid.RowDefinitions>
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="*" />
                         <ColumnDefinition Width="*" />
                     </Grid.ColumnDefinitions>
 
+                    <!-- Uso da CPU -->
                     <Border x:Name="CpuUsageCard" Grid.Row="0" Grid.Column="0" Style="{StaticResource MetricCardStyle}" Margin="0,0,5,5">
                         <Grid>
-                            <Grid.RowDefinitions><RowDefinition Height="Auto" /><RowDefinition Height="*" /></Grid.RowDefinitions>
-                            <Grid.ColumnDefinitions><ColumnDefinition Width="29" /><ColumnDefinition Width="*" /></Grid.ColumnDefinitions>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto" />
+                                <RowDefinition Height="*" />
+                            </Grid.RowDefinitions>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="30" />
+                                <ColumnDefinition Width="*" />
+                            </Grid.ColumnDefinitions>
                             <Path Data="{StaticResource CpuIconGeometry}" Stroke="{StaticResource AccentBrush}" StrokeThickness="1.8"
                                   StrokeStartLineCap="Round" StrokeEndLineCap="Round" Width="20" Height="20" Stretch="Uniform"
                                   VerticalAlignment="Top" Margin="0,1,8,0" />
@@ -116,10 +129,17 @@
                         </Grid>
                     </Border>
 
+                    <!-- Frequências -->
                     <Border x:Name="FrequencyCard" Grid.Row="0" Grid.Column="1" Style="{StaticResource MetricCardStyle}" Margin="5,0,0,5">
                         <Grid>
-                            <Grid.RowDefinitions><RowDefinition Height="Auto" /><RowDefinition Height="*" /></Grid.RowDefinitions>
-                            <Grid.ColumnDefinitions><ColumnDefinition Width="29" /><ColumnDefinition Width="*" /></Grid.ColumnDefinitions>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto" />
+                                <RowDefinition Height="*" />
+                            </Grid.RowDefinitions>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="30" />
+                                <ColumnDefinition Width="*" />
+                            </Grid.ColumnDefinitions>
                             <Path Data="{StaticResource FrequencyIconGeometry}" Stroke="#7A8CFF" StrokeThickness="1.8"
                                   StrokeStartLineCap="Round" StrokeEndLineCap="Round" Width="21" Height="19" Stretch="Uniform"
                                   VerticalAlignment="Top" Margin="0,1,8,0" />
@@ -138,18 +158,23 @@
                         </Grid>
                     </Border>
 
+                    <!-- Tensão -->
                     <Border x:Name="VoltageCard" Grid.Row="1" Grid.Column="0" Style="{StaticResource MetricCardStyle}" Margin="0,5,5,0">
                         <Grid>
-                            <Grid.RowDefinitions><RowDefinition Height="Auto" /><RowDefinition Height="*" /></Grid.RowDefinitions>
-                            <Grid.ColumnDefinitions><ColumnDefinition Width="29" /><ColumnDefinition Width="*" /></Grid.ColumnDefinitions>
-                            <Path Data="{StaticResource VoltageIconGeometry}" Fill="#4BE8F3" Stroke="#4BE8F3" StrokeThickness="1"
-                                  Width="19" Height="20" Stretch="Uniform" VerticalAlignment="Top" Margin="0,0,8,0" />
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto" />
+                                <RowDefinition Height="Auto" />
+                                <RowDefinition Height="*" />
+                            </Grid.RowDefinitions>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="30" />
+                                <ColumnDefinition Width="*" />
+                            </Grid.ColumnDefinitions>
+                            <Path Data="{StaticResource VoltageIconGeometry}" Fill="#4BE8F3" Stroke="#4BE8F3" StrokeThickness="1" Width="19" Height="20" Stretch="Uniform" VerticalAlignment="Top" Margin="0,0,8,0" />
                             <StackPanel Grid.Column="1">
-                                <TextBlock Text="TENSÃO" Foreground="{StaticResource SecondaryTextBrush}" FontSize="9"
-                                           FontWeight="SemiBold" />
+                                <TextBlock Text="TENSÃO" Foreground="{StaticResource SecondaryTextBrush}" FontSize="9" FontWeight="SemiBold" />
                                 <StackPanel Orientation="Horizontal" Margin="0,4,0,0">
-                                    <TextBlock x:Name="VoltageValue" Text="N/D" Foreground="{StaticResource PrimaryTextBrush}"
-                                               FontSize="22" FontWeight="SemiBold" />
+                                    <TextBlock x:Name="VoltageValue" Text="N/D" Foreground="{StaticResource PrimaryTextBrush}" FontSize="22" FontWeight="SemiBold" />
                                     <TextBlock x:Name="VoltageUnit" Text="V" Foreground="{StaticResource AccentBrush}" FontSize="11" Margin="4,8,0,0" />
                                 </StackPanel>
                             </StackPanel>
@@ -159,10 +184,17 @@
                         </Grid>
                     </Border>
 
+                    <!-- Potência -->
                     <Border x:Name="PowerCard" Grid.Row="1" Grid.Column="1" Style="{StaticResource MetricCardStyle}" Margin="5,5,0,0">
                         <Grid>
-                            <Grid.RowDefinitions><RowDefinition Height="Auto" /><RowDefinition Height="*" /></Grid.RowDefinitions>
-                            <Grid.ColumnDefinitions><ColumnDefinition Width="29" /><ColumnDefinition Width="*" /></Grid.ColumnDefinitions>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto" />
+                                <RowDefinition Height="*" />
+                            </Grid.RowDefinitions>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="29" />
+                                <ColumnDefinition Width="*" />
+                            </Grid.ColumnDefinitions>
                             <Path Data="{StaticResource PowerIconGeometry}" Stroke="#67B7FF" StrokeThickness="2.2"
                                   StrokeStartLineCap="Round" StrokeEndLineCap="Round" Width="20" Height="19" Stretch="Uniform"
                                   VerticalAlignment="Top" Margin="0,1,8,0" />
@@ -180,51 +212,66 @@
                                       Points="" Visibility="Collapsed" Margin="0,4,0,0" />
                         </Grid>
                     </Border>
-                </Grid>
 
-                <Border Grid.Row="3" Height="78" VerticalAlignment="Bottom"
-                        CornerRadius="18" Padding="12,8" Background="#0B1929"
-                        BorderBrush="#1D4164" BorderThickness="1">
-                    <Grid>
-                        <Grid.RowDefinitions>
-                            <RowDefinition Height="39" />
-                            <RowDefinition Height="18" />
-                        </Grid.RowDefinitions>
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="*" />
-                            <ColumnDefinition Width="1" />
-                            <ColumnDefinition Width="*" />
-                        </Grid.ColumnDefinitions>
-                        <StackPanel Grid.Row="0" Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center">
-                            <Ellipse x:Name="DeviceStatusDot" Width="8" Height="8" Fill="{StaticResource UnknownBrush}" VerticalAlignment="Center" />
-                            <Path Data="{StaticResource DisplayIconGeometry}" Stroke="{StaticResource AccentBrush}" StrokeThickness="1.4"
+                    <Border Grid.Row="2" Grid.ColumnSpan="2" Height="78" CornerRadius="18" Padding="12,8" Background="#0B1929" BorderBrush="#1D4164" BorderThickness="1.2">
+                        <Grid>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="40" />
+                                <RowDefinition Height="20" />
+                            </Grid.RowDefinitions>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="1" />
+                                <ColumnDefinition Width="*" />
+                            </Grid.ColumnDefinitions>
+                            <StackPanel Grid.Row="0" Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center">
+                                <Ellipse x:Name="DeviceStatusDot" Width="8" Height="8" Fill="{StaticResource UnknownBrush}" VerticalAlignment="Center" />
+                                <Path Data="{StaticResource DisplayIconGeometry}" Stroke="{StaticResource AccentBrush}" StrokeThickness="1.4"
                                   Width="22" Height="20" Stretch="Uniform" Margin="10,0,9,0" />
-                            <StackPanel VerticalAlignment="Center">
-                                <TextBlock x:Name="DeviceStatusText" Text="Display verificando" Foreground="{StaticResource PrimaryTextBrush}"
+                                <StackPanel VerticalAlignment="Center">
+                                    <TextBlock x:Name="DeviceStatusText" Text="Display verificando" Foreground="{StaticResource PrimaryTextBrush}"
                                            FontSize="10" FontWeight="SemiBold" />
-                                <TextBlock x:Name="DeviceStatusDetail" Text="Aguardando conexão" Foreground="{StaticResource SecondaryTextBrush}"
+                                    <TextBlock x:Name="DeviceStatusDetail" Text="Aguardando conexão" Foreground="{StaticResource SecondaryTextBrush}"
                                            FontSize="9" Margin="0,2,0,0" />
+                                </StackPanel>
                             </StackPanel>
-                        </StackPanel>
-                        <Border Grid.Row="0" Grid.Column="1" Width="1" Height="28" Background="#244663" VerticalAlignment="Center" />
-                        <StackPanel Grid.Row="0" Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center" Margin="12,0,0,0">
-                            <Ellipse x:Name="ServiceStatusDot" Width="8" Height="8" Fill="{StaticResource UnknownBrush}" VerticalAlignment="Center" />
-                            <TextBlock FontFamily="Segoe MDL2 Assets" Text="&#xE713;" Foreground="#70BFFF" FontSize="19"
+                            <Border Grid.Row="0" Grid.Column="1" Width="1" Height="28" Background="#244663" VerticalAlignment="Center" />
+                            <StackPanel Grid.Row="0" Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center" Margin="12,0,0,0">
+                                <Ellipse x:Name="ServiceStatusDot" Width="8" Height="8" Fill="{StaticResource UnknownBrush}" VerticalAlignment="Center" />
+                                <TextBlock FontFamily="Segoe MDL2 Assets" Text="&#xE713;" Foreground="#70BFFF" FontSize="19"
                                        Margin="10,0,10,0" VerticalAlignment="Center" />
-                            <StackPanel VerticalAlignment="Center">
-                                <TextBlock x:Name="ServiceStatusText" Text="Serviço verificando" Foreground="{StaticResource PrimaryTextBrush}"
+                                <StackPanel VerticalAlignment="Center">
+                                    <TextBlock x:Name="ServiceStatusText" Text="Serviço verificando" Foreground="{StaticResource PrimaryTextBrush}"
                                            FontSize="10" FontWeight="SemiBold" />
-                                <TextBlock x:Name="ServiceStatusDetail" Text="Monitoramento em tempo real" Foreground="{StaticResource SecondaryTextBrush}"
+                                    <TextBlock x:Name="ServiceStatusDetail" Text="Monitoramento em tempo real" Foreground="{StaticResource SecondaryTextBrush}"
                                            FontSize="9" Margin="0,2,0,0" />
+                                </StackPanel>
                             </StackPanel>
-                        </StackPanel>
-                        <TextBlock x:Name="MessageText" Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="3"
+                            <TextBlock x:Name="MessageText" Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="3"
                                    Text="Conectando ao serviço Aura Ice..." Foreground="{StaticResource MutedTextBrush}"
                                    FontSize="8" TextWrapping="NoWrap" TextTrimming="CharacterEllipsis"
                                    TextAlignment="Center" VerticalAlignment="Center"
                                    ToolTip="{Binding Text, RelativeSource={RelativeSource Self}}" />
-                    </Grid>
-                </Border>
+                        </Grid>
+                    </Border>
+
+                    <!-- Versão -->
+                    <Border Grid.Row="3" Grid.ColumnSpan="2" Margin="4">
+                        <Grid>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="10" />
+                            </Grid.RowDefinitions>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                            </Grid.ColumnDefinitions>
+                            <TextBlock x:Name="VersionText" Grid.Row="1" Grid.Column="0"
+                                Text="Versão 0.1.17" Foreground="{StaticResource MutedTextBrush}"
+                                FontSize="10" TextWrapping="NoWrap" TextTrimming="CharacterEllipsis"
+                                TextAlignment="Center" VerticalAlignment="Center"
+                                ToolTip="{Binding Text, RelativeSource={RelativeSource Self}}" />
+                        </Grid>
+                    </Border>
+                </Grid>
             </Grid>
         </Border>
 

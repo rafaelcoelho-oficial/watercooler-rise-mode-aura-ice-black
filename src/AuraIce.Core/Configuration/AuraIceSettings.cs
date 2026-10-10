@@ -47,12 +47,35 @@ public sealed class AuraIceSettingsStore
     {
         Directory.CreateDirectory(DirectoryPath);
         string temporaryPath = FilePath + ".tmp";
-
-        await using (FileStream stream = File.Create(temporaryPath))
+        bool saved = false;
+        try
         {
-            await JsonSerializer.SerializeAsync(stream, settings, JsonOptions, cancellationToken);
-        }
+            await using (FileStream stream = File.Create(temporaryPath))
+            {
+                await JsonSerializer.SerializeAsync(stream, settings, JsonOptions, cancellationToken);
+            }
 
-        File.Move(temporaryPath, FilePath, overwrite: true);
+            cancellationToken.ThrowIfCancellationRequested();
+            File.Move(temporaryPath, FilePath, overwrite: true);
+            saved = true;
+        }
+        finally
+        {
+            if (!saved)
+            {
+                try
+                {
+                    File.Delete(temporaryPath);
+                }
+                catch (IOException)
+                {
+                    // Preserve the original write or cancellation error.
+                }
+                catch (UnauthorizedAccessException)
+                {
+                    // Preserve the original write or cancellation error.
+                }
+            }
+        }
     }
 }

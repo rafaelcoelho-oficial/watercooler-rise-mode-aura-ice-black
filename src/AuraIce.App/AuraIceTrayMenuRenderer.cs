@@ -8,7 +8,19 @@ internal sealed class AuraIceTrayMenuRenderer : ToolStripProfessionalRenderer
 {
     public static readonly Color MenuBackground = Color.FromArgb(10, 22, 36);
     public static readonly Color MenuForeground = Color.FromArgb(235, 245, 252);
-    private ToolStripItem? _hoveredItem;
+    private static readonly Color MenuBorder = Color.FromArgb(42, 90, 136);
+    private static readonly Color ItemBackground = Color.FromArgb(25, 58, 88);
+    private static readonly Color ItemBorder = Color.FromArgb(57, 137, 190);
+    private static readonly Color PressedBackground = Color.FromArgb(18, 42, 66);
+    private static readonly Color SeparatorColor = Color.FromArgb(36, 67, 94);
+    private static readonly Color ActiveForeground = Color.FromArgb(245, 252, 255);
+    private static readonly Color DisabledForeground = Color.FromArgb(112, 137, 157);
+
+    private const float LogicalBorderWidth = 1F;
+    private const float LogicalSelectionInset = 1F;
+    private const float LogicalCornerRadius = 6F;
+    private const float LogicalSeparatorInset = 8F;
+    private ToolStripMenuItem? _pointerPressedItem;
 
     public AuraIceTrayMenuRenderer()
         : base(new AuraIceMenuColorTable())
@@ -16,78 +28,130 @@ internal sealed class AuraIceTrayMenuRenderer : ToolStripProfessionalRenderer
         RoundedEdges = false;
     }
 
-    public void SetHoveredItem(ToolStripItem? item)
+    public void SetPointerPressedItem(ToolStripMenuItem? item)
     {
-        _hoveredItem = item is ToolStripMenuItem && item.Enabled ? item : null;
+        if (ReferenceEquals(_pointerPressedItem, item))
+        {
+            return;
+        }
+
+        ToolStripMenuItem? previous = _pointerPressedItem;
+        _pointerPressedItem = item;
+        previous?.Invalidate();
+        item?.Invalidate();
     }
 
     protected override void OnRenderToolStripBackground(ToolStripRenderEventArgs e)
     {
         using var brush = new SolidBrush(MenuBackground);
-        e.Graphics.FillRectangle(brush, new Rectangle(Point.Empty, e.ToolStrip.Size));
+        e.Graphics.FillRectangle(brush, e.ToolStrip.ClientRectangle);
     }
 
     protected override void OnRenderToolStripBorder(ToolStripRenderEventArgs e)
     {
-        using var pen = new Pen(Color.FromArgb(42, 90, 136));
-        Rectangle bounds = new(Point.Empty, e.ToolStrip.Size);
-        bounds.Width--;
-        bounds.Height--;
-        e.Graphics.DrawRectangle(pen, bounds);
+        Rectangle bounds = e.ToolStrip.ClientRectangle;
+        if (bounds.Width <= 1 || bounds.Height <= 1)
+        {
+            return;
+        }
+
+        float scale = DpiScale(e.ToolStrip);
+        float borderWidth = LogicalBorderWidth * scale;
+        var state = e.Graphics.Save();
+        try
+        {
+            e.Graphics.PixelOffsetMode = PixelOffsetMode.Half;
+            using var pen = new Pen(MenuBorder, borderWidth);
+            e.Graphics.DrawRectangle(
+                pen,
+                bounds.X + borderWidth / 2F,
+                bounds.Y + borderWidth / 2F,
+                bounds.Width - borderWidth,
+                bounds.Height - borderWidth);
+        }
+        finally
+        {
+            e.Graphics.Restore(state);
+        }
     }
 
     protected override void OnRenderMenuItemBackground(ToolStripItemRenderEventArgs e)
     {
-        if (!e.Item.Enabled || !IsHovered(e.Item))
+        if (e.Item is not ToolStripMenuItem item || !item.Enabled ||
+            (!item.Selected && !item.Pressed && !ReferenceEquals(item, _pointerPressedItem)))
         {
             return;
         }
 
-        Rectangle bounds = new(
-            3,
-            e.Item.Bounds.Top + 1,
-            Math.Max(0, (e.ToolStrip?.ClientSize.Width ?? 0) - 6),
-            Math.Max(0, e.Item.Bounds.Height - 2));
-        if (bounds.Width <= 0 || bounds.Height <= 0)
+        float scale = DpiScale(e.ToolStrip);
+        float borderWidth = LogicalBorderWidth * scale;
+        // ToolStrip paints each item with a graphics origin at the item itself.
+        // Using item.Bounds would offset the outline a second time and clip its corners.
+        float inset = (LogicalSelectionInset + LogicalBorderWidth / 2F) * scale;
+        var bounds = new RectangleF(
+            inset,
+            inset,
+            item.Width - inset * 2F,
+            item.Height - inset * 2F);
+        if (bounds.Width <= borderWidth * 2F || bounds.Height <= borderWidth * 2F)
         {
             return;
         }
 
-        var smoothingMode = e.Graphics.SmoothingMode;
-        e.Graphics.SmoothingMode = SmoothingMode.AntiAlias;
-        using var path = RoundedRectangle(bounds, 6);
-        using var brush = new SolidBrush(Color.FromArgb(25, 58, 88));
-        using var pen = new Pen(Color.FromArgb(57, 137, 190));
-        pen.Alignment = PenAlignment.Inset;
-        e.Graphics.FillPath(brush, path);
-        e.Graphics.DrawPath(pen, path);
-        e.Graphics.SmoothingMode = smoothingMode;
+        Color background = item.Pressed || ReferenceEquals(item, _pointerPressedItem)
+            ? PressedBackground
+            : ItemBackground;
+        float radius = Math.Min(LogicalCornerRadius * scale, Math.Min(bounds.Width, bounds.Height) / 2F);
+        var state = e.Graphics.Save();
+        try
+        {
+            e.Graphics.SmoothingMode = SmoothingMode.AntiAlias;
+            e.Graphics.PixelOffsetMode = PixelOffsetMode.HighQuality;
+            using var path = RoundedRectangle(bounds, radius);
+            using var brush = new SolidBrush(background);
+            using var pen = new Pen(ItemBorder, borderWidth);
+            e.Graphics.FillPath(brush, path);
+            e.Graphics.DrawPath(pen, path);
+        }
+        finally
+        {
+            e.Graphics.Restore(state);
+        }
     }
 
     protected override void OnRenderItemText(ToolStripItemTextRenderEventArgs e)
     {
-        e.TextColor = e.Item.Enabled
-            ? IsHovered(e.Item) ? Color.FromArgb(245, 252, 255) : MenuForeground
-            : Color.FromArgb(112, 137, 157);
+        e.TextColor = !e.Item.Enabled
+            ? DisabledForeground
+            : e.Item.Selected || e.Item.Pressed ? ActiveForeground : MenuForeground;
         base.OnRenderItemText(e);
     }
 
     protected override void OnRenderSeparator(ToolStripSeparatorRenderEventArgs e)
     {
-        int y = e.Item.Bounds.Top + e.Item.Bounds.Height / 2;
-        using var pen = new Pen(Color.FromArgb(36, 67, 94));
-        e.Graphics.DrawLine(pen, 10, y, Math.Max(10, (e.ToolStrip?.Width ?? 0) - 11), y);
+        Rectangle bounds = new(Point.Empty, e.Item.Size);
+        float scale = DpiScale(e.ToolStrip);
+        int height = Math.Max(1, (int)Math.Round(scale));
+        int inset = (int)Math.Round(LogicalSeparatorInset * scale);
+        int y = bounds.Top + (bounds.Height - height) / 2;
+        int width = bounds.Width - inset * 2;
+        if (width <= 0)
+        {
+            return;
+        }
+
+        using var brush = new SolidBrush(SeparatorColor);
+        e.Graphics.FillRectangle(brush, inset, y, width, height);
     }
 
-    private bool IsHovered(ToolStripItem item)
+    private static float DpiScale(ToolStrip? toolStrip)
     {
-        return ReferenceEquals(_hoveredItem, item)
-            || (_hoveredItem is null && item.Selected);
+        return (toolStrip?.DeviceDpi ?? 96) / 96F;
     }
 
-    private static GraphicsPath RoundedRectangle(Rectangle bounds, int radius)
+    private static GraphicsPath RoundedRectangle(RectangleF bounds, float radius)
     {
-        int diameter = radius * 2;
+        float diameter = radius * 2F;
         var path = new GraphicsPath();
         path.AddArc(bounds.X, bounds.Y, diameter, diameter, 180, 90);
         path.AddArc(bounds.Right - diameter, bounds.Y, diameter, diameter, 270, 90);
@@ -100,12 +164,12 @@ internal sealed class AuraIceTrayMenuRenderer : ToolStripProfessionalRenderer
     private sealed class AuraIceMenuColorTable : ProfessionalColorTable
     {
         public override Color ToolStripDropDownBackground => MenuBackground;
-        public override Color MenuBorder => Color.FromArgb(42, 90, 136);
-        public override Color MenuItemBorder => Color.FromArgb(57, 137, 190);
-        public override Color MenuItemSelected => Color.FromArgb(25, 58, 88);
-        public override Color MenuItemSelectedGradientBegin => Color.FromArgb(25, 58, 88);
-        public override Color MenuItemSelectedGradientEnd => Color.FromArgb(18, 42, 66);
-        public override Color SeparatorDark => Color.FromArgb(36, 67, 94);
+        public override Color MenuBorder => AuraIceTrayMenuRenderer.MenuBorder;
+        public override Color MenuItemBorder => ItemBorder;
+        public override Color MenuItemSelected => ItemBackground;
+        public override Color MenuItemSelectedGradientBegin => ItemBackground;
+        public override Color MenuItemSelectedGradientEnd => PressedBackground;
+        public override Color SeparatorDark => SeparatorColor;
         public override Color SeparatorLight => MenuBackground;
         public override Color ImageMarginGradientBegin => MenuBackground;
         public override Color ImageMarginGradientMiddle => MenuBackground;

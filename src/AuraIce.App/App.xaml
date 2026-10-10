@@ -24,11 +24,6 @@
             <GradientStop Color="#12263A" Offset="0" />
             <GradientStop Color="#0C1928" Offset="1" />
         </LinearGradientBrush>
-        <LinearGradientBrush x:Key="GaugeGradientBrush" StartPoint="0,1" EndPoint="1,0">
-            <GradientStop Color="#3777FF" Offset="0" />
-            <GradientStop Color="#41E0F2" Offset="1" />
-        </LinearGradientBrush>
-
         <DropShadowEffect x:Key="PanelShadow" BlurRadius="26" ShadowDepth="7" Opacity="0.48" Color="#000000" />
 
         <Style x:Key="ChromeButtonStyle" TargetType="Button">

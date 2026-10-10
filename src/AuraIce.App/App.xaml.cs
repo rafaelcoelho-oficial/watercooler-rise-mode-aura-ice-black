@@ -12,6 +12,7 @@ public partial class App : System.Windows.Application
     private Forms.NotifyIcon? _notifyIcon;
     private System.Drawing.Icon? _applicationIcon;
     private MainWindow? _window;
+    private Task? _exitTask;
     private Mutex? _instanceMutex;
     private EventWaitHandle? _showWindowEvent;
     private EventWaitHandle? _uninstallEvent;
@@ -107,7 +108,7 @@ public partial class App : System.Windows.Application
             executeOnlyOnce: false);
         _uninstallRegistration = ThreadPool.RegisterWaitForSingleObject(
             _uninstallEvent,
-            (_, _) => Dispatcher.BeginInvoke(new Action(ExitApplication)),
+            (_, _) => Dispatcher.BeginInvoke(new Action(RequestExit)),
             null,
             Timeout.Infinite,
             executeOnlyOnce: false);
@@ -196,34 +197,26 @@ public partial class App : System.Windows.Application
             ShowImageMargin = false,
             ShowCheckMargin = false,
             AutoSize = true,
-            Padding = new System.Windows.Forms.Padding(6)
-        };
-        menu.MouseMove += (_, eventArgs) =>
-        {
-            ToolStripItem? item = menu.GetItemAt(eventArgs.Location);
-            renderer.SetHoveredItem(item);
-            menu.Invalidate();
-        };
-        menu.MouseLeave += (_, _) =>
-        {
-            renderer.SetHoveredItem(null);
-            menu.Invalidate();
+            Padding = new System.Windows.Forms.Padding(4)
         };
 
         var openItem = new Forms.ToolStripMenuItem("Abrir widget")
         {
-            Padding = new System.Windows.Forms.Padding(12, 7, 12, 7)
+            Padding = new System.Windows.Forms.Padding(12, 8, 12, 8),
+            Margin = new System.Windows.Forms.Padding(6, 2, 6, 2),
+            TextAlign = System.Drawing.ContentAlignment.MiddleLeft
         };
         openItem.Click += (_, _) => ShowWindow();
+        TrackPointerPress(openItem);
 
         var exitItem = new Forms.ToolStripMenuItem("Sair")
         {
-            Padding = new System.Windows.Forms.Padding(12, 7, 12, 7)
+            Padding = new System.Windows.Forms.Padding(12, 8, 12, 8),
+            Margin = new System.Windows.Forms.Padding(6, 2, 6, 2),
+            TextAlign = System.Drawing.ContentAlignment.MiddleLeft
         };
-        exitItem.Click += (_, _) => ExitApplication();
-
-        TrackMenuItemHover(openItem, menu, renderer);
-        TrackMenuItemHover(exitItem, menu, renderer);
+        exitItem.Click += (_, _) => RequestExit();
+        TrackPointerPress(exitItem);
 
         menu.Items.Add(openItem);
         menu.Items.Add(new Forms.ToolStripSeparator
@@ -231,29 +224,32 @@ public partial class App : System.Windows.Application
             Margin = new System.Windows.Forms.Padding(10, 3, 10, 3)
         });
         menu.Items.Add(exitItem);
+        menu.Opening += (_, _) =>
+        {
+            int itemWidth = menu.Items.OfType<Forms.ToolStripMenuItem>()
+                .Max(item => item.GetPreferredSize(System.Drawing.Size.Empty).Width + item.Margin.Horizontal);
+            menu.MinimumSize = new System.Drawing.Size(itemWidth, 0);
+        };
+        menu.Closed += (_, _) => renderer.SetPointerPressedItem(null);
         return menu;
-    }
 
-    private static void TrackMenuItemHover(
-        Forms.ToolStripMenuItem item,
-        Forms.ContextMenuStrip menu,
-        AuraIceTrayMenuRenderer renderer)
-    {
-        item.MouseEnter += (_, _) =>
+        void TrackPointerPress(Forms.ToolStripMenuItem item)
         {
-            renderer.SetHoveredItem(item);
-            menu.Invalidate();
-        };
-        item.MouseLeave += (_, _) =>
-        {
-            renderer.SetHoveredItem(null);
-            menu.Invalidate();
-        };
+            item.MouseDown += (_, e) =>
+            {
+                if (e.Button == Forms.MouseButtons.Left)
+                {
+                    renderer.SetPointerPressedItem(item);
+                }
+            };
+            item.MouseUp += (_, _) => renderer.SetPointerPressedItem(null);
+            item.MouseLeave += (_, _) => renderer.SetPointerPressedItem(null);
+        }
     }
 
     private void ShowWindow()
     {
-        if (_window is null)
+        if (_window is null || _exitTask is not null)
         {
             return;
         }
@@ -263,36 +259,121 @@ public partial class App : System.Windows.Application
         _window.Activate();
     }
 
-    private void ExitApplication()
+    internal void RequestExit()
     {
-        _window?.AllowExit();
-        _notifyIcon?.Dispose();
-        Shutdown();
+        _exitTask ??= ExitApplicationAsync();
+    }
+
+    private async Task ExitApplicationAsync()
+    {
+        // Let the current Click or Closing event return before Shutdown closes the window.
+        await Task.Yield();
+        try
+        {
+            _window?.BeginShutdown();
+            if (_window is not null)
+            {
+                await _window.WaitForOperationsStopAsync();
+            }
+        }
+        catch (TimeoutException exception)
+        {
+            System.Diagnostics.Trace.TraceWarning("Timed out waiting for Aura Ice UI operations to stop: {0}", exception.Message);
+        }
+        catch (Exception exception)
+        {
+            System.Diagnostics.Trace.TraceError("Aura Ice shutdown cleanup failed: {0}", exception.Message);
+        }
+        finally
+        {
+            _window?.AllowExit();
+            try
+            {
+                DisposeTrayIcon();
+            }
+            catch (Exception exception)
+            {
+                System.Diagnostics.Trace.TraceError("Failed to dispose Aura Ice tray resources: {0}", exception.Message);
+            }
+
+            Shutdown();
+        }
+    }
+
+    private void DisposeTrayIcon()
+    {
+        Forms.NotifyIcon? notifyIcon = _notifyIcon;
+        _notifyIcon = null;
+        if (notifyIcon is null)
+        {
+            return;
+        }
+
+        Forms.ContextMenuStrip? contextMenu = notifyIcon.ContextMenuStrip;
+        try
+        {
+            notifyIcon.Visible = false;
+        }
+        finally
+        {
+            try
+            {
+                notifyIcon.ContextMenuStrip = null;
+            }
+            finally
+            {
+                try
+                {
+                    notifyIcon.Dispose();
+                }
+                finally
+                {
+                    contextMenu?.Dispose();
+                }
+            }
+        }
     }
 
     protected override void OnExit(System.Windows.ExitEventArgs e)
     {
-        _showWindowRegistration?.Unregister(null);
-        _uninstallRegistration?.Unregister(null);
-        _showWindowEvent?.Dispose();
-        _uninstallEvent?.Dispose();
-        _notifyIcon?.Dispose();
-        _applicationIcon?.Dispose();
+        TryCleanup("window", () => _window?.BeginShutdown());
+        TryCleanup("show-window registration", () => { _showWindowRegistration?.Unregister(null); });
+        TryCleanup("uninstall registration", () => { _uninstallRegistration?.Unregister(null); });
+        TryCleanup("show-window event", () => _showWindowEvent?.Dispose());
+        TryCleanup("uninstall event", () => _uninstallEvent?.Dispose());
+        TryCleanup("tray icon", DisposeTrayIcon);
+        TryCleanup("application icon", () => _applicationIcon?.Dispose());
+        _applicationIcon = null;
 
-        if (_instanceMutex is not null)
+        if (_instanceMutex is { } instanceMutex)
         {
-            try
+            TryCleanup("instance mutex release", () =>
             {
-                _instanceMutex.ReleaseMutex();
-            }
-            catch (ApplicationException)
-            {
-                // It can already be released if startup did not acquire it.
-            }
-
-            _instanceMutex.Dispose();
+                try
+                {
+                    instanceMutex.ReleaseMutex();
+                }
+                catch (ApplicationException)
+                {
+                    // The current thread does not own the mutex.
+                }
+            });
+            TryCleanup("instance mutex", instanceMutex.Dispose);
+            _instanceMutex = null;
         }
 
         base.OnExit(e);
+    }
+
+    private static void TryCleanup(string resource, Action cleanup)
+    {
+        try
+        {
+            cleanup();
+        }
+        catch (Exception exception)
+        {
+            System.Diagnostics.Trace.TraceError("Failed to release Aura Ice {0}: {1}", resource, exception.Message);
+        }
     }
 }

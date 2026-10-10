@@ -29,7 +29,7 @@ public sealed class LibreHardwareMonitorCpuTemperatureProvider : ICpuTemperature
         EnsureOpened();
         _computer.Accept(new UpdateVisitor());
 
-        return EnumerateSensors(SensorType.Temperature)
+        return [.. EnumerateSensors(SensorType.Temperature)
             .Where(candidate => GetTemperaturePriority(candidate.Hardware.HardwareType, candidate.Sensor.Name) > 0)
             .Select(sensor => new TemperatureSensorInfo(
                 sensor.Sensor.Identifier.ToString(),
@@ -37,8 +37,7 @@ public sealed class LibreHardwareMonitorCpuTemperatureProvider : ICpuTemperature
                 sensor.Sensor.Value is { } value ? Convert.ToDecimal(value) : null,
                 GetTemperaturePriority(sensor.Hardware.HardwareType, sensor.Sensor.Name)))
             .OrderByDescending(sensor => sensor.Priority)
-            .ThenBy(sensor => sensor.Name)
-            .ToArray();
+            .ThenBy(sensor => sensor.Name)];
     }
 
     public TemperatureReading? ReadTemperature(string? preferredSensorIdentifier = null)
