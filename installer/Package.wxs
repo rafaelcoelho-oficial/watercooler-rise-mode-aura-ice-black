@@ -4,7 +4,7 @@
   <Package
       Name="Aura Ice Controller"
       Manufacturer="Aura Ice"
-      Version="0.1.21"
+      Version="0.1.22"
       UpgradeCode="7A4B8F07-7E40-4F28-9F6D-A9A8755F37E1"
       Scope="perMachine"
       Compressed="yes">
