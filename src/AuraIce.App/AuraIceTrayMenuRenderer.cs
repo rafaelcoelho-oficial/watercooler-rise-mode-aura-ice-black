@@ -17,7 +17,7 @@ internal sealed class AuraIceTrayMenuRenderer : ToolStripProfessionalRenderer
     private static readonly Color DisabledForeground = Color.FromArgb(112, 137, 157);
 
     private const float LogicalBorderWidth = 1F;
-    private const float LogicalMenuCornerRadius = 8F;
+    internal const float LogicalMenuCornerRadius = 14F;
     private const float LogicalSelectionInset = 1F;
     private const float LogicalCornerRadius = 6F;
     private const float LogicalSeparatorInset = 8F;
@@ -130,6 +130,11 @@ internal sealed class AuraIceTrayMenuRenderer : ToolStripProfessionalRenderer
         e.TextColor = !e.Item.Enabled
             ? DisabledForeground
             : e.Item.Selected || e.Item.Pressed ? ActiveForeground : MenuForeground;
+
+        Rectangle textBounds = e.TextRectangle;
+        textBounds.Y = (e.Item.Height - textBounds.Height) / 2;
+        e.TextRectangle = textBounds;
+
         base.OnRenderItemText(e);
     }
 

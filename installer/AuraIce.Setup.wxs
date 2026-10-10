@@ -5,7 +5,7 @@
   <Bundle
       Name="Aura Ice Controller"
       Manufacturer="Aura Ice"
-      Version="0.1.22"
+      Version="0.1.23"
       UpgradeCode="C73ED7F9-E729-4946-BE53-D7C1F76E5328"
       IconSourceFile="$(var.RepoRoot)\assets\AuraIce.ico"
       Compressed="yes">

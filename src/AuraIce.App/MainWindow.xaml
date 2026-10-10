@@ -265,7 +265,7 @@
                                 <ColumnDefinition Width="*" />
                             </Grid.ColumnDefinitions>
                             <TextBlock x:Name="VersionText" Grid.Row="1" Grid.Column="0"
-                                Text="Versão 0.1.22" Foreground="{StaticResource MutedTextBrush}"
+                                Text="Versão 0.1.23" Foreground="{StaticResource MutedTextBrush}"
                                 FontSize="10" TextWrapping="NoWrap" TextTrimming="CharacterEllipsis"
                                 TextAlignment="Center" VerticalAlignment="Center"
                                 ToolTip="{Binding Text, RelativeSource={RelativeSource Self}}" />

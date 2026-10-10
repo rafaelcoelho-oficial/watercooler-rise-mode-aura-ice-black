@@ -202,8 +202,8 @@ public partial class App : System.Windows.Application
 
         var openItem = new Forms.ToolStripMenuItem("Abrir widget")
         {
-            Padding = new System.Windows.Forms.Padding(12, 8, 12, 8),
-            Margin = new System.Windows.Forms.Padding(6, 2, 6, 2),
+            Padding = new System.Windows.Forms.Padding(12, 4, 12, 4),
+            Margin = new System.Windows.Forms.Padding(6, 4, 6, 4),
             TextAlign = System.Drawing.ContentAlignment.MiddleLeft
         };
         openItem.Click += (_, _) => ShowWindow();
@@ -211,8 +211,8 @@ public partial class App : System.Windows.Application
 
         var exitItem = new Forms.ToolStripMenuItem("Sair")
         {
-            Padding = new System.Windows.Forms.Padding(12, 8, 12, 8),
-            Margin = new System.Windows.Forms.Padding(6, 2, 6, 2),
+            Padding = new System.Windows.Forms.Padding(12, 4, 12, 4),
+            Margin = new System.Windows.Forms.Padding(6, 4, 6, 4),
             TextAlign = System.Drawing.ContentAlignment.MiddleLeft
         };
         exitItem.Click += (_, _) => RequestExit();
@@ -224,11 +224,11 @@ public partial class App : System.Windows.Application
             Margin = new System.Windows.Forms.Padding(0, 0, 0, 0)
         });
         menu.Items.Add(exitItem);
-        menu.Opened += (_, _) => ApplyRoundedCorners(menu, 8);
+        menu.Opened += (_, _) => ApplyRoundedCorners(menu, AuraIceTrayMenuRenderer.LogicalMenuCornerRadius);
         menu.SizeChanged += (_, _) =>
         {
             if (menu.IsHandleCreated)
-                ApplyRoundedCorners(menu, 8);
+                ApplyRoundedCorners(menu, AuraIceTrayMenuRenderer.LogicalMenuCornerRadius);
         };
         menu.Opening += (_, _) =>
         {
@@ -253,7 +253,7 @@ public partial class App : System.Windows.Application
         }
     }
 
-    private static void ApplyRoundedCorners(Forms.ContextMenuStrip menu, int radius)
+    private static void ApplyRoundedCorners(Forms.ContextMenuStrip menu, float radius)
     {
         if (menu.Width <= 0 || menu.Height <= 0)
             return;
